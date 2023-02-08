@@ -2,9 +2,9 @@
 
 int main() {
 
-    int socket_d, messageLength;
-    socklen_t addressLength;
-    struct sockaddr_in serverAddress, clientAddress;
+    int socket_d, messageLength; // soket ID, length of incoming message
+    socklen_t addressLength; // length of address
+    struct sockaddr_in serverAddress, clientAddress; // address of server, address of client
     char *buf = malloc(sizeof(char) * BUF_SIZE);
 
     if ((socket_d = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
@@ -21,6 +21,8 @@ int main() {
         perror("binding error");
         exit(1);
     }
+
+    printf("SERVER: port number: %d\n", ntohs(serverAddress.sin_port));
 
     addressLength = sizeof(serverAddress);
     if (getsockname(socket_d, (struct sockaddr *) &serverAddress, &addressLength) < 0) {
