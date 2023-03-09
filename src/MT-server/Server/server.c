@@ -1,99 +1,122 @@
 #include "server.h"
 
-void reaper(int sig) {
-    int status;
-    while (wait3(&status, WNOHANG, (struct rusage *)0) >= 0);
+int main() {
+  int socket_d, socket_client, fd;
+  socklen_t address_length;
+  struct sockaddr_in server_address, client_address;
+
+  if ((socket_d = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+    perror("Error socket creation");
+    exit(1);
+  }
+
+  bzero((char *)&server_address, sizeof(server_address));
+  server_address.sin_family = AF_INET;
+  server_address.sin_addr.s_addr = htonl(INADDR_ANY);
+  server_address.sin_port = 0;
+
+  if (bind(socket_d, (struct sockaddr *)&server_address,
+           sizeof(server_address)) < 0) {
+    perror("Error binding");
+    exit(1);
+  }
+
+  address_length = sizeof(server_address);
+  if (getsockname(socket_d, (struct sockaddr *)&server_address,
+                  &address_length) < 0) {
+    perror("Error getsocketname");
+    exit(1);
+  }
+
+  printf("SERVER: port number: %d\n", ntohs(server_address.sin_port));
+  if (listen(socket_d, 5) < 0) {
+    perror("Error listen");
+    exit(1);
+  }
+
+  SocketClient thread_data;
+  pthread_t thread;
+
+  pthread_mutex_init(&mutex, NULL);
+
+  while (1) {
+    if ((socket_client = accept(socket_d, (struct sockaddr *)&client_address,
+                                &address_length)) < 0) {
+      perror("Error client socket");
+      exit(1);
+    }
+
+    thread_data.socket_client = socket_client;
+    thread_data.client_address = client_address;
+
+    if (pthread_create(&thread, NULL, childWork, &thread_data) != 0) {
+      perror("Error pthread create");
+      exit(1);
+    }
+
+    if (pthread_detach(thread) != 0) {
+      perror("Error pthread detach");
+      exit(1);
+    }
+  }
+  pthread_mutex_destroy(&mutex);
+  close(fd);
+  return 0;
 }
 
-int main()
-{
-    int sid = socket(AF_INET, SOCK_STREAM, 0);
+void *childWork(void *args) {
+  SocketClient *thread_data = (SocketClient *)args;
+  int socket_client = thread_data->socket_client;
+  struct sockaddr_in client_address = thread_data->client_address;
+  int n;
 
-    if (sid < 0) {
-        perror("Failed to init socket!");
-        exit(1);
+  char *msg = malloc(sizeof(char) * BUF_SIZE);
+  char *buf = malloc(sizeof(char) * BUF_SIZE);
+
+  memset(msg, 0, BUF_SIZE * sizeof(char));
+
+  printf("%s %s %s:%d %s\n", getTime(),
+         "client address:", inet_ntoa(client_address.sin_addr),
+         ntohs(client_address.sin_port), "connected");
+
+  while (1) {
+    if (recv(socket_client, msg, sizeof(msg), 0) <= 0) {
+      break;
     }
 
-    struct sockaddr_in addr_p;
+    printf("%s %s %s:%d %s %s\n", getTime(),
+           "client address:", inet_ntoa(client_address.sin_addr),
+           ntohs(client_address.sin_port), "message:", msg);
+    sprintf(buf, "%s %s %s:%d %s %s\n", getTime(),
+            "client address:", inet_ntoa(client_address.sin_addr),
+            ntohs(client_address.sin_port), "message:", msg);
 
-    addr_p.sin_family = AF_INET;
-    addr_p.sin_port = 0;
-
-    addr_p.sin_addr.s_addr = htonl(INADDR_ANY);
-
-    inet_aton("127.0.0.1", &addr_p.sin_addr);
-
-    if (bind(sid, (struct sockaddr *)&addr_p, sizeof(addr_p))) {
-        perror("Failed bind name to socket!\n");
-        exit(1);
+    // pthread_mutex_lock(&mutex);
+    int fd = open("log.txt", O_CREAT | O_APPEND | O_WRONLY, S_IRWXU);
+    if (fd < 0) {
+      perror("Error open file");
+      exit(1);
     }
 
-    socklen_t len = sizeof(addr_p);
-
-    if (getsockname(sid, (struct sockaddr *)&addr_p, &len) < 0) {
-        perror("Fail getsockname\n");
-        exit(1);
+    if (write(fd, buf, strlen(buf)) == -1) {
+      perror("Error write");
+      exit(1);
     }
+    close(fd);
+    // pthread_mutex_unlock(&mutex);
+  }
 
+  close(socket_client);
+  printf("%s %s %s:%d %s\n", getTime(),
+         "client address:", inet_ntoa(client_address.sin_addr),
+         ntohs(client_address.sin_port), "disconnected");
 
-    printf("SERVER: port number - %d\n", ntohs(addr_p.sin_port));
-    printf("SERVER: IP - %s\n", inet_ntoa(addr_p.sin_addr));
+  return NULL;
+}
 
-    if (listen(sid, 3)) {
-        perror("Failed to init socket!\n");
-        exit(1);
-    }
-
-     struct sockaddr_in client_addr_p;
-
-     socklen_t lenC;
-
-    (void) signal(SIGCHLD, reaper);
-
-    while(1) {
-        lenC = sizeof(client_addr_p);
-        char buf[BUFLEN];
-        int msg_l;
-
-
-        int sidC = accept(sid, 0,  0);
-
-        if (sidC < 0) {
-            perror("Fail accept\n");
-            exit(1);
-        }
-
-        switch(fork()) {
-            case -1:
-                perror("fork");
-                close(sidC);
-                break;
-            case 0:
-                close(sid);
-                while(1) {
-                    buf[0] = '\0';
-                    if ((msg_l = recv(sidC, buf, BUFLEN, 0)) < 0) {
-                        perror("Cannot read the message!\n");
-                        exit(1);
-                    }
-                    if (buf[0] == '\0') {
-                        close(sidC);
-                        system("ps -aux | grep 'Z+'");
-                        exit(0);
-                    }
-                    buf[msg_l] = '\0';
-                    printf("/n");
-                    printf("SERVER: message: %s\n", buf);
-                    printf("SERVER: message lenght: %d\n", msg_l);
-                    printf("SERVER: process ID: %d\n", getpid());
-                    printf("/n");
-                }
-            default:
-                close(sidC);
-                while(waitpid(-1, NULL, WNOHANG) > 0);
-
-
-
-        }
-    }
+char *getTime() {
+  time_t mytime = time(NULL);
+  char *time_str = ctime(&mytime);
+  time_str[strlen(time_str) - 1] = '\0';
+  return time_str;
 }

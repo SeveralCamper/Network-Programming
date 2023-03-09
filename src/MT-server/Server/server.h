@@ -1,20 +1,28 @@
 #ifndef SERVER_H_
 #define SERVER_H_
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <stdlib.h>
 #include <arpa/inet.h>
+#include <fcntl.h>
+#include <netinet/in.h>
+#include <pthread.h>
 #include <stdio.h>
-#include <strings.h>
-#include <unistd.h>
-#include <sys/time.h>
-#include <sys/resource.h>
-#include <sys/wait.h>
-#include <signal.h>
+#include <stdlib.h>
 #include <string.h>
+#include <sys/socket.h>
+#include <sys/wait.h>
+#include <time.h>
+#include <unistd.h>
 
-#define BUFLEN 81
+#define BUF_SIZE 128
+
+pthread_mutex_t mutex;
+
+typedef struct {
+  int socket_client;
+  struct sockaddr_in client_address;
+} SocketClient;
+
+void *childWork(void *args);
+char *getTime();
 
 #endif //  SERVER_H_
