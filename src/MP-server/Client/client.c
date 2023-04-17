@@ -2,7 +2,7 @@
 
 int main(int argc, char* argv[]){
     if (argc < 4) {
-        printf("./client [IP-адрес сервера] [порт сервера] [сообщение]");
+        printf("./client [IP-адрес сервера] [порт сервера] [сообщение]\n");
         exit(1);
     }
 

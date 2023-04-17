@@ -22,8 +22,6 @@ int main() {
         exit(1);
     }
 
-    printf("SERVER: port number: %d\n", ntohs(serverAddress.sin_port));
-
     addressLength = sizeof(serverAddress);
     if (getsockname(socket_d, (struct sockaddr *) &serverAddress, &addressLength) < 0) {
         perror("Error getsocketname");
@@ -34,8 +32,7 @@ int main() {
     while (1) {
         addressLength = sizeof(clientAddress);
         bzero(buf, BUF_SIZE);
-        if ((messageLength = recvfrom(socket_d, buf, BUF_SIZE, 0, (struct sockaddr *) &clientAddress, &addressLength)) <
-            0) {
+        if ((messageLength = recvfrom(socket_d, buf, BUF_SIZE, 0, (struct sockaddr *) &clientAddress, &addressLength)) < 0) {
             perror("Error socket client");
             exit(1);
         }

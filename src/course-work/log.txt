@@ -1,0 +1,14 @@
+-----NEW SESSION (Sun Apr 16 22:35:46 2023)-----
+Sun Apr 16 22:35:46 2023	SERVER: PORT - 41039
+Sun Apr 16 22:35:50 2023	SERVER: 127.0.0.1:57178 CONNECTED!
+Sun Apr 16 22:35:55 2023	SERVER: 127.0.0.1:38988 CONNECTED!
+Sun Apr 16 22:35:59 2023	USRMSG: 127.0.0.1:57178 - /s N hola
+Sun Apr 16 22:36:03 2023	USRMSG: 127.0.0.1:38988 - /s N helo
+Sun Apr 16 22:38:55 2023	USRMSG: 127.0.0.1:38988 - helo: hi
+Sun Apr 16 22:39:02 2023	USRMSG: 127.0.0.1:57178 - hola: hi
+Sun Apr 16 22:39:25 2023	USRMSG: 127.0.0.1:57178 - /s W hola->helo: hi
+Sun Apr 16 22:41:40 2023	USRMSG: 127.0.0.1:57178 - hola: Миша самый лучший программист
+Sun Apr 16 22:41:49 2023	USRMSG: 127.0.0.1:57178 - hola: Ты же знал 
+Sun Apr 16 22:42:17 2023	USRMSG: 127.0.0.1:38988 - helo: Конечно знал! Он мой кумир
+Sun Apr 16 22:43:05 2023	USRMSG: 127.0.0.1:38988 - helo: Для меня от топ
+Sun Apr 16 22:43:18 2023	USRMSG: 127.0.0.1:38988 - helo: Для меня он топ
