@@ -1,22 +1,16 @@
-#include "client.h"
+#include "../include/client.h"
 
-using namespace std;
-
-int get_server_port()
-{
+int get_server_port() {
   FILE *fp = popen("lsof -iTCP -sTCP:LISTEN | grep server", "r");
-  if (!fp)
-  {
-    cerr << "ERROR: popen() failed - " << strerror(errno) << endl;
+  if (!fp) {
+    std::cerr << "ERROR: popen() failed - " << strerror(errno) << std::endl;
     return -1;
   }
   int port = 0;
   char line[256];
-  while (fgets(line, sizeof(line), fp))
-  {
+  while (fgets(line, sizeof(line), fp)) {
     char *pch = strchr(line, ':');
-    if (pch != NULL)
-    {
+    if (pch != NULL) {
       port = atoi(pch + 1);
       break;
     }
@@ -25,50 +19,36 @@ int get_server_port()
   return port;
 }
 
-void set_username(string &username, int client_socket)
-{
-  while (true)
-  {
-    cout << "Please enter your username: ";
-    getline(cin, username);
-    if (username.find(' ') != string::npos || username == "")
-    {
-      cerr << "ERROR: Spaces in username or empty username is not allowed! " << endl;
+void set_username(std::string &username, int client_socket) {
+  while (true) {
+    std::cout << "Please enter your username: ";
+    std::getline(std::cin, username);
+    if (username.find(' ') != std::string::npos || username == "") {
+      std::cerr << "ERROR: Spaces in username or empty username is not allowed! " << std::endl;
       username = "";
-    }
-    else
-    {
-      print_info();
-      string username_message = "/s N " + username;
-      if (send(client_socket, username_message.c_str(), username_message.size(), 0) < 0)
-      {
-        cerr << "ERROR: send() failed - " << strerror(errno) << endl;
+    } else {
+      std::string username_message = "/s N " + username;
+      if (send(client_socket, username_message.c_str(), username_message.size(), 0) < 0) {
+        std::cerr << "ERROR: send() failed - " << strerror(errno) << std::endl;
         exit(EXIT_FAILURE);
       }
 
       char buffer[BUFFER_SIZE];
       int bytes_received = recv(client_socket, buffer, BUFFER_SIZE, 0);
-      if (bytes_received < 0)
-      {
-        cerr << "ERROR: recv() failed - " << strerror(errno) << endl;
+      if (bytes_received < 0) {
+        std::cerr << "ERROR: recv() failed - " << strerror(errno) << std::endl;
         exit(EXIT_FAILURE);
-      }
-      else if (bytes_received == 0)
-      {
-        cerr << "ERROR: Connection closed by server" << endl;
+      } else if (bytes_received == 0) {
+        std::cerr << "ERROR: Connection closed by server" << std::endl;
         exit(EXIT_FAILURE);
-      }
-      else
-      {
+      } else {
         buffer[bytes_received] = '\0';
-        if (strcmp(buffer, "SUCCESS: Username accepted") == 0)
-        {
-          cout << "Username accepted" << endl;
+        if (strcmp(buffer, "SUCCESS: Username accepted") == 0) {
+          std::cout << "Username accepted" << std::endl;
+          print_info();
           break;
-        }
-        else
-        {
-          cerr << "ERROR: Username already taken" << endl;
+        } else {
+          std::cerr << "ERROR: Username already taken" << std::endl;
           username = "";
         }
       }
@@ -76,35 +56,26 @@ void set_username(string &username, int client_socket)
   }
 }
 
-void receive_messages(int client_socket)
-{
-  while (true)
-  {
+void receive_messages(int client_socket) {
+  while (true) {
     char *buffer = new char[BUFFER_SIZE];
     int bytes_received = recv(client_socket, buffer, BUFFER_SIZE, 0);
-    if (bytes_received < 0)
-    {
-      cerr << "ERROR: recv() failed - " << strerror(errno) << endl;
+    if (bytes_received < 0) {
+      std::cerr << "ERROR: recv() failed - " << strerror(errno) << std::endl;
       exit(EXIT_FAILURE);
-    }
-    else if (bytes_received == 0)
-    {
-      cout << "INFO: Connection closed by server" << endl;
+    } else if (bytes_received == 0) {
+      std::cout << "INFO: Connection closed by server" << std::endl;
       close(client_socket);
       exit(EXIT_SUCCESS);
-    }
-    else
-    {
-      string temp = string(buffer);
-      if (strcmp(buffer, "ERROR: Username already taken") == 0)
-      {
-        string new_username = "";
+    } else {
+      std::string temp = std::string(buffer);
+      if (strcmp(buffer, "ERROR: Username already taken") == 0) {
+        std::string new_username = "";
         set_username(new_username, client_socket);
       }
       buffer[bytes_received] = '\0';
-      cout << buffer << endl;
-      if (strcmp(buffer, "INFO: You have been kicked!") == 0)
-      {
+      std::cout << buffer << std::endl;
+      if (strcmp(buffer, "INFO: You have been kicked!") == 0) {
         close(client_socket);
         exit(EXIT_SUCCESS);
       }
@@ -113,16 +84,14 @@ void receive_messages(int client_socket)
   }
 }
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
   clear_screen();
   int client_socket;
   struct sockaddr_in server_address, client_address;
   struct hostent *hp, *gethostbyname();
 
-  if ((client_socket = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-  {
-    cerr << "ERROR: Can't get a socket - " << strerror(errno) << endl;
+  if ((client_socket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+    std::cerr << "ERROR: Can't get a socket - " << strerror(errno) << std::endl;
     exit(EXIT_FAILURE);
   }
 
@@ -131,87 +100,69 @@ int main(int argc, char *argv[])
   client_address.sin_port = htonl(0);
 
   socklen_t address_length = sizeof(client_address);
-  if (getsockname(client_socket, (struct sockaddr *)&client_address, &address_length) < 0)
-  {
-    cerr << "ERROR: getsockname() failed - " << strerror(errno) << endl;
+  if (getsockname(client_socket, (struct sockaddr *)&client_address, &address_length) < 0) {
+    std::cerr << "ERROR: getsockname() failed - " << strerror(errno) << std::endl;
     exit(EXIT_FAILURE);
   }
 
   memset(&server_address, 0, sizeof(server_address));
   server_address.sin_family = AF_INET;
-  if (DEFAULT_SERVER_PORT == 0)
+  if (DEFAULT_SERVER_PORT == 0) {
     server_address.sin_port = htons(get_server_port());
-  else
+  } else {
     server_address.sin_port = htons(DEFAULT_SERVER_PORT);
+  }
 
   inet_pton(AF_INET, "127.0.0.1", &server_address.sin_addr);
 
-  if (connect(client_socket, (struct sockaddr *)&server_address, sizeof(server_address)) < 0)
-  {
-    cerr << "ERROR: connect() failed - " << strerror(errno) << endl;
+  if (connect(client_socket, (struct sockaddr *)&server_address, sizeof(server_address)) < 0) {
+    std::cerr << "ERROR: connect() failed - " << strerror(errno) << std::endl;
     exit(EXIT_FAILURE);
-  }
-  else
-  {
-    cout << "Connected to 127.0.0.1:" << ntohs(server_address.sin_port) << endl;
+  } else {
+    std::cout << "Connected to 127.0.0.1:" << ntohs(server_address.sin_port) << std::endl;
   }
 
-  string username = "";
+  std::string username = "";
   set_username(username, client_socket);
 
-  thread receiver(receive_messages, client_socket);
+  std::thread receiver(receive_messages, client_socket);
   receiver.detach();
 
-  while (true)
-  {
-    string message;
-    getline(cin, message);
+  while (true) {
+    std::string message;
+    std::getline(std::cin, message);
 
-    if (message == "/exit")
-    {
+    if (message == "/exit") {
       break;
-    }
-    else if (message == "/help")
-    {
+    } else if (message == "/help") {
       print_info();
-    }
-    else if (message.substr(0, 2) == "/w")
-    {
-      string recipient = "", direct_message = "";
+    } else if (message.substr(0, 2) == "/d") {
+      std::string recipient = "", direct_message = "";
       size_t space_pos = message.find_first_of(' ', 3);
 
-      if (space_pos == string::npos)
-      {
-        cerr << "ERROR: Invalid input" << endl;
-      }
-      else
-      {
+      if (space_pos == std::string::npos) {
+        std::cerr << "ERROR: Invalid input" << std::endl;
+      } else {
         recipient = message.substr(3, space_pos - 3);
         direct_message = message.substr(space_pos + 1);
-        string dm_message = "/s W " + username + "->" + recipient + ": " + direct_message;
-        if (send(client_socket, dm_message.c_str(), dm_message.size(), 0) < 0)
-        {
-          cerr << "ERROR: send() failed - " << strerror(errno) << endl;
+        std::string dm_message = "/s W " + username + "->" + recipient + ": " + direct_message;
+        if (send(client_socket, dm_message.c_str(), dm_message.size(), 0) < 0) {
+          std::cerr << "ERROR: send() failed - " << strerror(errno) << std::endl;
           exit(EXIT_FAILURE);
         }
       }
-    }
-    else if (message.find('/') == 0)
-    {
-      cout << "ERROR: Use /help to see availabe commands!" << endl;
-    }
-    else
-    {
-      string full_message = username + ": " + message;
-      if (send(client_socket, full_message.c_str(), full_message.size(), 0) < 0)
-      {
-        cerr << "ERROR: send() failed - " << strerror(errno) << endl;
+    } else if (message.find('/') == 0) {
+      std::cout << "ERROR: Use /help to see availabe commands!" << std::endl;
+    } else {
+      std::string full_message = username + ": " + message;
+      if (send(client_socket, full_message.c_str(), full_message.size(), 0) < 0) {
+        std::cerr << "ERROR: send() failed - " << strerror(errno) << std::endl;
         exit(EXIT_FAILURE);
       }
     }
   }
 
-  cout << "CLIENT: Connection closed" << endl;
+  std::cout << "CLIENT: Connection closed" << std::endl;
 
   close(client_socket);
 

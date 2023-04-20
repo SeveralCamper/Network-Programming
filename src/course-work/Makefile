@@ -6,9 +6,9 @@ CC = g++ -Wall -Wextra
 all: clean start
 
 start:
-	$(CC) -D _GNU_SOURCE src/server.cpp -o server
-	$(CC) -pthread src/client.cpp -o client
+	$(CC) -D _GNU_SOURCE src/server.cpp -o bin/server
+	$(CC) -pthread src/client.cpp -o bin/client
 
 clean:
-	rm -rf server client log.txt
+	rm -rf bin/server bin/client bin/log.txt
 
