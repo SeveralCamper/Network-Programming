@@ -2,9 +2,11 @@
 
 struct user {
   std::string uip = "";
+  std::string username = "";
+
   int uport = 0;
   int usocket = 0;
-  std::string username = "";
+  int uroom = 0;
 };
 
 void print_users(user *users, std::ofstream &log) {
@@ -260,9 +262,27 @@ int main(int argc, char *argv[]) {
           for (int i = 0; i < FD_SETSIZE; i++) {
             if (FD_ISSET(i, &fd_list) && i != server_socket && i != fd && i != STDIN_FILENO) {
               if (!system_call) {
-                if (send(i, buffer, strlen(buffer), 0) < 0) {
-                  std::cerr << "ERROR: send() failed - " << strerror(errno) << std::endl;
-                  log << getTime() << "\tERROR: send() failed - " << strerror(errno) << std::endl;
+                std::string new_buff = std::string(buffer);
+                int current_mess_room = 0;
+                if (new_buff.substr(1, 1) == "M") {
+                  current_mess_room = users[fd].uroom = 0;
+                } else if (new_buff.substr(1, 1) == "P") {
+                  current_mess_room = users[fd].uroom = 4;
+                } else if (new_buff.substr(1, 1) == "R") {
+                  if (new_buff.substr(2, 1) == "1") {
+                    current_mess_room = users[fd].uroom = 1;
+                  } else if (new_buff.substr(2, 1) == "2") {
+                    current_mess_room = users[fd].uroom = 2;
+                  } else if (new_buff.substr(2, 1) == "3") {
+                    current_mess_room = users[fd].uroom = 3;
+                  }
+                }
+
+                if (current_mess_room == users[i].uroom) {
+                  if (send(i, buffer, strlen(buffer), 0) < 0) {
+                    std::cerr << "ERROR: send() failed - " << strerror(errno) << std::endl;
+                    log << getTime() << "\tERROR: send() failed - " << strerror(errno) << std::endl;
+                  }
                 }
               }
             }

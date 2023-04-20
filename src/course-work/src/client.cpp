@@ -1,5 +1,7 @@
 #include "../include/client.h"
 
+
+
 int get_server_port() {
   FILE *fp = popen("lsof -iTCP -sTCP:LISTEN | grep server", "r");
   if (!fp) {
@@ -86,7 +88,7 @@ void receive_messages(int client_socket) {
 
 int main(int argc, char *argv[]) {
   clear_screen();
-  int client_socket;
+  int client_socket, current_room = 0;
   struct sockaddr_in server_address, client_address;
   struct hostent *hp, *gethostbyname();
 
@@ -125,6 +127,8 @@ int main(int argc, char *argv[]) {
   std::string username = "";
   set_username(username, client_socket);
 
+  std::string room = "[MAIN]";
+
   std::thread receiver(receive_messages, client_socket);
   receiver.detach();
 
@@ -151,10 +155,24 @@ int main(int argc, char *argv[]) {
           exit(EXIT_FAILURE);
         }
       }
+    } else if (message.substr(0, 3) == "/cr") {
+      current_room =  std::stoi(message.substr(4, 5));
+      if (current_room == SERVER_ROOMS::ROOM_1) {
+        room = "[R1]";
+      } else if (current_room == SERVER_ROOMS::ROOM_2) {
+        room = "[R2]";
+      } else if (current_room == SERVER_ROOMS::ROOM_3) {
+        room = "[R3]";
+      } else if (current_room == SERVER_ROOMS::PRIVATE) {
+        room = "[P]";
+      } else {
+        room = "[M]";
+      }
+      std::cout << "You have joined to" << room << std::endl;
     } else if (message.find('/') == 0) {
       std::cout << "ERROR: Use /help to see availabe commands!" << std::endl;
     } else {
-      std::string full_message = username + ": " + message;
+      std::string full_message = room + " " + username + ": " + message;
       if (send(client_socket, full_message.c_str(), full_message.size(), 0) < 0) {
         std::cerr << "ERROR: send() failed - " << strerror(errno) << std::endl;
         exit(EXIT_FAILURE);

@@ -20,6 +20,14 @@
 #define BUFFER_SIZE 1024
 #define MAX_CLIENTS 10
 
+enum SERVER_ROOMS {
+    MAIN_ROOM = 0,
+    ROOM_1,
+    ROOM_2,
+    ROOM_3,
+    PRIVATE
+};
+
 void print_info() {
     std::cout << std::endl << "HELP INFO" << std::endl << std::endl;
     std::cout << "Commands:" << std::endl;
