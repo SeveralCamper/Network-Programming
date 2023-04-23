@@ -32,8 +32,9 @@ void print_info() {
     std::cout << std::endl << "HELP INFO" << std::endl << std::endl;
     std::cout << "Commands:" << std::endl;
     std::cout << "/help - print this information" << std::endl;
+    std::cout << "/d <username> <message> - direct message" << std::endl;
     std::cout << "/exit - close connection and close a programm" << std::endl;
-    std::cout << "/d <username> <message> - direct message" << std::endl << std::endl;
+    std::cout << "/cr <room number>: 0 - main, 1 - 1 room, 2 - 2 room, 3 - 3 room, 4 - private" << std::endl;
     std::cout << "Course work was done with:" << std::endl;
     std::cout << "*   Connection protocol - TCP" << std::endl;
     std::cout << "*   Multithreaded implementation - select" << std::endl;
