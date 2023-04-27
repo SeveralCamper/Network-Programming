@@ -1,7 +1,5 @@
 #include "../include/client.h"
 
-
-
 int get_server_port() {
   FILE *fp = popen("lsof -iTCP -sTCP:LISTEN | grep server", "r");
   if (!fp) {
